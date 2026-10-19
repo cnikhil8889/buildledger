@@ -77,4 +77,4 @@ android {
     lint { abortOnError true; checkReleaseBuilds true }
 }
 
-dependencies { testImplementation "junit:junit:4.13.2"; testImplementation "org.json:json:20240303" }
+dependencies { testImplementation "junit:junit:4.13.2"; testImplementation "org.json:json:20260814" }
