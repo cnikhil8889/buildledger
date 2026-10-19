@@ -23,7 +23,7 @@
     "@types/react-dom": "19.2.3",
     "esbuild": "0.27.3",
     "playwright-core": "1.58.2",
-    "postcss": "8.5.8",
+    "postcss": "8.5.30",
     "react-test-renderer": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3"
