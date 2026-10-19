@@ -1,0 +1,80 @@
+plugins { id 'com.android.application' }
+def publicConfigFile = rootProject.file('backend/public-config.json')
+def publicConfig = publicConfigFile.exists() ? new groovy.json.JsonSlurper().parse(publicConfigFile) : [:]
+def cloudUrl = System.getenv('BUILDLEDGER_SUPABASE_URL') ?: publicConfig.url ?: ''
+def cloudKey = System.getenv('BUILDLEDGER_SUPABASE_KEY') ?: publicConfig.publishableKey ?: ''
+def authProviders = System.getenv('BUILDLEDGER_AUTH_PROVIDERS') ?: (publicConfig.providers ?: []).join(',')
+if (!(authProviders ==~ /(?:google|apple|azure)?(?:,(?:google|apple|azure))*/)) throw new GradleException('Unsupported authentication provider list.')
+def cloudTestKeystore = System.getenv('BUILDLEDGER_CLOUD_TEST_KEYSTORE')
+if (cloudUrl && !(cloudUrl ==~ /https:\/\/[a-z0-9-]+\.supabase\.co/)) throw new GradleException('Use the project HTTPS supabase.co URL without a trailing slash.')
+if (cloudKey && !cloudKey.startsWith('sb_publishable_')) {
+    try {
+        def role = new groovy.json.JsonSlurper().parseText(new String(java.util.Base64.urlDecoder.decode(cloudKey.split('\\.')[1]), 'UTF-8')).role
+        if (role != 'anon') throw new Exception('Public anon key required')
+    } catch (Exception ignored) { throw new GradleException('Use a public publishable/anon key. Never put service-role or secret keys in the app.') }
+}
+android {
+    namespace 'com.buildledger.app'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+    defaultConfig {
+        applicationId 'com.buildledger.app'
+        minSdk 26
+        targetSdk 36
+        versionCode 5
+        versionName '0.3.0'
+        manifestPlaceholders = [authCallbackScheme: 'com.buildledger.app']
+        buildConfigField 'String', 'AUTH_CALLBACK_SCHEME', '"com.buildledger.app"'
+        buildConfigField 'String', 'AUTH_PROVIDERS', '"' + authProviders + '"'
+        buildConfigField 'boolean', 'ACCOUNT_DELETION_ENABLED', 'false'
+        buildConfigField 'String', 'SUPABASE_URL', '"' + cloudUrl + '"'
+        buildConfigField 'String', 'SUPABASE_KEY', '"' + cloudKey + '"'
+        // The owner-private website is separate from this source distribution.
+        buildConfigField 'String', 'CLOUD_WORKSPACE_URL', '""'
+    }
+    buildFeatures { buildConfig true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    signingConfigs {
+        cloudTest {
+            if (cloudTestKeystore) {
+                storeFile file(cloudTestKeystore)
+                storePassword 'android'
+                keyAlias 'buildledger-cloud-test'
+                keyPassword 'android'
+            }
+        }
+        release {
+            def path = System.getenv('BUILDLEDGER_KEYSTORE')
+            if (path != null) {
+                storeFile file(path)
+                storePassword System.getenv('BUILDLEDGER_STORE_PASSWORD')
+                keyAlias System.getenv('BUILDLEDGER_KEY_ALIAS')
+                keyPassword System.getenv('BUILDLEDGER_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-test'
+            manifestPlaceholders = [authCallbackScheme: 'com.buildledger.app.debug']
+            buildConfigField 'String', 'AUTH_CALLBACK_SCHEME', '"com.buildledger.app.debug"'
+        }
+        cloudTest {
+            initWith debug
+            applicationIdSuffix '.cloudtest'
+            versionNameSuffix '-cloud-test'
+            manifestPlaceholders = [authCallbackScheme: 'com.buildledger.app']
+            buildConfigField 'String', 'AUTH_CALLBACK_SCHEME', '"com.buildledger.app"'
+            matchingFallbacks = ['debug']
+            if (cloudTestKeystore) signingConfig signingConfigs.cloudTest
+        }
+        release {
+            minifyEnabled false
+            if (System.getenv('BUILDLEDGER_KEYSTORE') != null) signingConfig signingConfigs.release
+        }
+    }
+    lint { abortOnError true; checkReleaseBuilds true }
+}
+
+dependencies { testImplementation "junit:junit:4.13.2"; testImplementation "org.json:json:20240303" }

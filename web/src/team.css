@@ -1,0 +1,90 @@
+.team-app { min-height:var(--viewport-height); font-size:14px; line-height:1.55; }
+.team-header { position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#1b2c43;color:#ffcf8c; }
+.team-header .brand-assets { flex:1;justify-content:center; }
+.team-header .brand-logo { width:27px;height:36px; }
+.team-header .brand-wordmark { width:140px;max-width:40vw; }
+.team-header .icon-btn { min-width:48px;min-height:48px;color:#ffcf8c; }
+.team-main { width:100%;max-width:1000px;padding:16px 20px calc(var(--bottom-nav-height) + 28px);margin:0 auto; }
+.team-account,.team-section-title,.team-title { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap; }
+.team-account { color:#586b80;font-size:12px;margin-bottom:20px; }
+.team-account>span { display:flex;align-items:center;gap:6px;overflow-wrap:anywhere;min-width:0; }
+.team-account .text-link { font-size:13px;gap:5px; }
+.team-title { margin-bottom:20px;align-items:flex-start; }
+.team-title>div { flex:1;min-width:0; }
+.team-title h1 { font-size:28px;line-height:1.25;letter-spacing:-.5px;overflow-wrap:anywhere; }
+.team-title p { margin-top:9px;color:#586b80;font-size:14px; }
+.team-kicker { display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;margin-bottom:9px;color:#8b6533; }
+.team-role,.team-status { display:inline-flex;border:1px solid #d9d9d3;background:#f1e7d9;color:#4b5b6e;border-radius:30px;padding:5px 10px;font-size:12px;text-transform:capitalize; }
+.team-role.owner { background:#1b2c43;color:#ffcf8c; }
+.team-company-switch { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px; }
+.team-company-switch select { flex:1 1 220px;min-width:0;max-width:100%;font-size:16px;min-height:48px; }
+.team-app .btn { min-height:48px;font-size:14px;white-space:normal;line-height:1.4; }
+.team-app .text-link { min-height:44px;display:inline-flex;align-items:center;gap:6px; }
+.team-section,.team-welcome,.team-invitation { border:1px solid #dedbd4;background:#fffcf7;border-radius:14px;padding:20px;margin:0 0 16px;min-width:0;overflow-wrap:anywhere; }
+.team-section h2,.team-welcome h2,.team-invitation h2 { font-size:20px;line-height:1.4;letter-spacing:-.3px; }
+.team-section h3 { font-size:16px;line-height:1.5; }
+.team-section small { font-size:12px;color:#586b80; }
+.team-section p { margin:8px 0; }
+.team-section-title { margin-bottom:18px; }
+.team-section-title h2 { min-width:0;font-size:21px; }
+.team-section .team-section-title { margin-bottom:10px; }
+.team-actions { display:flex;gap:10px;flex-wrap:wrap; }
+.team-stat-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 22px; }
+.team-stat-grid article { display:flex;flex-direction:column;gap:10px;padding:18px;background:#fffcf7;border:1px solid #dedbd4;border-radius:12px;min-width:0; }
+.team-stat-grid svg { color:#967342; }
+.team-stat-grid b { font-size:28px;line-height:1.25; }
+.team-stat-grid span { font-size:13px;color:#586b80; }
+.team-note,.team-footnote { font-size:13px;line-height:1.65;color:#586b80; }
+.team-footnote { padding:12px 4px; }
+.team-empty { padding:24px 4px;color:#586b80;font-size:14px;line-height:1.7; }
+.team-row { display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:16px 0;border-top:1px solid #e3ded7; }
+.team-row>div { min-width:0; }
+.team-row p { font-size:13px;color:#586b80; }
+.team-tabs { display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #dedbd4;margin:0 0 22px;padding-bottom:12px; }
+.team-tabs button { min-height:46px;border:1px solid #dedbd4;padding:10px 14px;border-radius:10px;font-size:14px; }
+.team-tabs button.active { background:#1b2c43;border-color:#1b2c43;color:#ffd18e; }
+.team-progress { height:8px;background:#e6e7e4;border-radius:8px;overflow:hidden;margin:16px 0 10px; }
+.team-progress span { display:block;height:100%;background:#d99a4a; }
+.team-prewrap { white-space:pre-wrap;overflow-wrap:anywhere; }
+.team-pay-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0; }
+.team-pay-grid>div { min-width:0; }
+.team-pay-grid dt { font-size:12px;color:#586b80;margin-bottom:6px; }
+.team-pay-grid dd { font-size:18px;font-weight:700;overflow-wrap:anywhere; }
+.team-stock-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid #e3ded7;flex-wrap:wrap; }
+.team-stock-row:first-of-type { margin-top:16px; }
+.team-stock-row>* { min-width:0;overflow-wrap:anywhere; }
+.team-low { color:#9a5c29; }
+.team-error,.team-message { padding:16px;border-radius:10px;margin-bottom:18px;font-size:14px;overflow-wrap:anywhere; }
+.team-error { background:#f8e8dd;border:1px solid #dab89c;color:#80502d; }
+.team-error .text-link { margin-top:8px; }
+.team-message { background:#e6ece8;border:1px solid #c9d7ce;color:#335447; }
+.team-loading { display:flex;gap:10px;align-items:center;padding:24px 0;color:#586b80; }
+.team-welcome { text-align:center;padding:34px 24px; }
+.team-welcome>svg { margin:0 auto 20px;color:#b27d3d; }
+.team-welcome p,.team-invitation p { margin:14px 0;color:#586b80; }
+.team-invitation { border-color:#d7a669;background:#fff4e5; }
+.team-invitation input { width:100%;min-width:0;font-size:14px;min-height:48px;margin:10px 0 16px;font-family:monospace; }
+.team-bottom-nav { position:fixed;bottom:0;left:0;right:0;width:100vw;max-width:100vw;z-index:28;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:4px 8px;background:#fcf9f2;border-top:1px solid #dedbd4; }
+.team-bottom-nav button { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:68px;min-width:0;padding:8px 2px;border-radius:12px;color:#586b80; }
+.team-bottom-nav span { font-size:12px;line-height:1.3;overflow-wrap:anywhere;max-width:100%; }
+.team-bottom-nav button.active { background:#f3e4d1;color:#203a59; }
+.team-dialog .field>span { font-size:14px; }
+.team-dialog input,.team-dialog select,.team-dialog textarea { font-size:16px;min-height:48px; }
+.team-dialog .field small { font-size:12px;color:#586b80; }
+.team-dialog .dialog-content { padding-bottom:0; }
+.team-editor-error { padding:10px;border-radius:8px;background:#fff0e3;color:#80502d!important;font-weight:600; }
+
+@media(max-width:600px) {
+ .team-main { padding:16px 16px calc(var(--bottom-nav-height) + 28px); }
+ .team-title h1 { font-size:26px; }
+ .team-section,.team-invitation { padding:18px 16px; }
+ .team-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }
+ .team-stat-grid article:last-child { grid-column:1/-1;display:grid;grid-template-columns:auto 1fr;align-items:center; }
+ .team-stat-grid article:last-child span { grid-column:2; }
+ .team-stat-grid b { font-size:26px; }
+ .team-pay-grid { grid-template-columns:1fr;gap:12px; }
+ .team-pay-grid>div { display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap; }
+ .team-pay-grid dt { font-size:14px;margin:0; }
+ .team-header { padding:8px;gap:6px; }
+ .team-section .field select { width:100%;min-width:0;font-size:16px;min-height:48px; }
+}

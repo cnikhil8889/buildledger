@@ -1,0 +1,48 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {PGlite} from '@electric-sql/pglite';import {readFile,readdir} from 'node:fs/promises';import {randomUUID} from 'node:crypto';
+import {setupTeamDb} from './helpers/team-db.mjs';
+test('Company commands enforce invitations, roles, project access, wage approvals, stock consistency and revocation',async()=>{
+ const db=await setupTeamDb();const day=(await db.query("select (now() at time zone 'Asia/Kolkata')::date::text as day")).rows[0].day;const owner=randomUUID(),office=randomUUID(),worker=randomUUID(),other=randomUUID();
+ const login=async id=>db.exec(`reset role;set request.jwt.claim.sub='${id}';set role authenticated;`);
+ const action=async(operation,payload,id=randomUUID())=>(await db.query('select public.bl_team_action($1,$2,$3) as value',[operation,payload,id])).rows[0].value;
+ const ok=async(...args)=>{const r=await action(...args);assert.ok(!r.error,r.error);return r;};
+ const denied=async(...args)=>assert.ok((await action(...args)).error);
+ const read=async c=>(await db.query('select public.bl_team_read($1) as value',[c||null])).rows[0].value;
+ try{
+  for(const [id,email] of [[owner,'owner@example.com'],[office,'office@example.com'],[worker,'worker@example.com'],[other,'other@example.com']])await db.query('insert into auth.users values($1,$2,now(),null)',[id,email]);
+  await login(owner);const company=(await ok('create_company',{name:'Test Builders',ownerName:'Owner'})).id;
+  const workerInvite=await ok('invite',{companyId:company,email:'WORKER@example.com',role:'worker'});const officeInvite=await ok('invite',{companyId:company,email:'office@example.com',role:'office'});
+  assert.equal(workerInvite.code.length,72);
+  await login(other);await denied('join_company',{code:workerInvite.code,name:'Wrong person'});
+  const unrelated=(await ok('create_company',{name:'Other company',ownerName:'Other'})).id;const otherProject=(await ok('create_project',{companyId:unrelated,name:'Unrelated site',year:2026,location:''})).id;
+  await login(worker);await ok('join_company',{code:workerInvite.code,name:'Worker'});await denied('join_company',{code:workerInvite.code,name:'Worker'});await denied('invite',{companyId:company,email:'x@example.com',role:'owner'});await denied('create_project',{companyId:company,name:'Forbidden',year:2026});assert.equal((await read(company)).members.length,1);
+  await login(office);await ok('join_company',{code:officeInvite.code,name:'Office'});await denied('invite',{companyId:company,email:'x@example.com',role:'worker'});await denied('member_access',{companyId:company,userId:office,role:'owner',active:true});await denied('rename_company',{companyId:company,name:'Stolen company'});
+  const project=(await ok('create_project',{companyId:company,name:'Shared site',year:2026,location:'Hyderabad'})).id;const hidden=(await ok('create_project',{companyId:company,name:'Other site',year:2026,location:''})).id;
+  await ok('assign_project',{companyId:company,projectId:project,userId:worker,assigned:true});
+  const task=(await ok('create_task',{companyId:company,projectId:project,title:'Check brickwork',assignee:worker,notes:'Record daily progress'})).id;
+  await denied('create_task',{companyId:company,projectId:hidden,title:'Unassigned task',assignee:worker});
+  await login(worker);let state=await read(company);assert.deepEqual(state.projects.map(p=>p.id),[project]);assert.equal(state.tasks.length,1);
+  await assert.rejects(db.query('update public.bl_members set role=\'owner\''),e=>e.code==='42501');
+  await denied('mark_attendance',{companyId:company,projectId:project,userId:office,date:day,dayFraction:1,hours:8});
+  await denied('create_report',{companyId:company,projectId:hidden,date:day,notes:'Forbidden'});
+  await denied('create_report',{companyId:company,projectId:otherProject,date:day,notes:'Other company'});
+  await ok('task_status',{companyId:company,id:task,status:'Done',version:1});await denied('task_status',{companyId:company,id:task,status:'Open',version:1});
+  const attendance=(await ok('mark_attendance',{companyId:company,projectId:project,userId:worker,date:day,dayFraction:1,hours:8,earnedPaise:900000})).id;
+  assert.equal((await read(company)).attendance[0].earned_paise,0);await denied('mark_attendance',{companyId:company,projectId:project,userId:worker,date:day,dayFraction:0,hours:8});await denied('approve_attendance',{companyId:company,id:attendance});
+  await ok('create_report',{companyId:company,projectId:project,date:day,notes:'Brickwork completed on first floor.'});
+  await login(office);await denied('approve_attendance',{companyId:company,id:attendance});await ok('set_rate',{companyId:company,userId:worker,kind:'daily',ratePaise:60000});await ok('approve_attendance',{companyId:company,id:attendance});
+  await ok('set_rate',{companyId:company,userId:worker,kind:'hourly',ratePaise:10000});assert.ok((await read(company)).audit.some(a=>a.action==='wage_rate_recorded'&&Number(a.details?.before?.rate_paise)===60000&&Number(a.details?.after?.rate_paise)===10000));assert.equal((await read(company)).attendance[0].earned_paise,60000);
+  const request=randomUUID();await ok('pay_wage',{companyId:company,userId:worker,amountPaise:20000,date:day,reference:'UPI'},request);await ok('pay_wage',{companyId:company,userId:worker,amountPaise:20000,date:day,reference:'UPI'},request);await denied('pay_wage',{companyId:company,userId:worker,amountPaise:30000,date:day},request);
+  const material=(await ok('create_material',{companyId:company,name:'Cement',unit:'bags',minimum:5})).id;
+  await ok('stock_movement',{companyId:company,projectId:project,materialId:material,quantity:10,direction:'receipt',note:'Delivery'});await denied('stock_movement',{companyId:company,projectId:project,materialId:material,quantity:11,direction:'issue'});
+  await login(worker);state=await read(company);assert.equal(state.payroll.length,1);assert.equal(Number(state.payroll[0].earned_paise),60000);assert.equal(Number(state.payroll[0].paid_paise),20000);assert.equal(state.wages.length,1);assert.equal(state.invites.length,0);assert.equal(state.audit.length,0);assert.equal(state.rates.length,1);
+  await denied('stock_movement',{companyId:company,projectId:project,materialId:material,quantity:1,direction:'receipt'});
+  const stockRequest=(await ok('request_material',{companyId:company,projectId:project,materialId:material,quantity:3,note:'For brickwork'})).id;
+  await denied('review_request',{companyId:company,id:stockRequest,decision:'issue'});
+  await login(office);await ok('review_request',{companyId:company,id:stockRequest,decision:'issue'});await denied('review_request',{companyId:company,id:stockRequest,decision:'issue'});assert.equal(Number((await read(company)).stock[0].quantity),7);
+  await login(other);assert.ok((await read(company)).error);assert.equal((await db.query('select * from public.bl_projects')).rows.length,1);await denied('set_rate',{companyId:company,userId:worker,kind:'daily',ratePaise:1});
+  await login(owner);await ok('rename_company',{companyId:company,name:'Test Builders Updated'});assert.equal((await read(company)).companies[0].name,'Test Builders Updated');await ok('member_access',{companyId:company,userId:worker,role:'worker',active:false});
+  await login(worker);assert.equal((await db.query('select * from public.bl_projects')).rows.length,0);assert.equal((await db.query('select * from public.bl_wages')).rows.length,0);assert.ok((await read(company)).error);await denied('create_report',{companyId:company,projectId:project,date:day,notes:'After removal'});
+  await db.exec('reset role;set role anon;');await assert.rejects(db.query('select public.bl_team_read(null)'),e=>e.code==='42501');await assert.rejects(db.query('select * from public.bl_projects'),e=>e.code==='42501');
+  await db.exec('reset role;');assert.equal((await db.query("select count(*)::int as count from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'bl_team_%' and p.prosecdef")).rows[0].count,0);
+ }finally{await db.close();}
+});

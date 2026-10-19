@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+import {build} from 'esbuild';
+import React from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+const here=path.dirname(fileURLToPath(import.meta.url));await mkdir(here+'/.build',{recursive:true});
+await build({entryPoints:[here+'/../src/BuildLedger.tsx'],bundle:true,platform:'node',format:'esm',packages:'external',tsconfig:here+'/../tsconfig.json',outfile:here+'/.build/ui.mjs'});
+const {default:App}=await import(pathToFileURL(here+'/.build/ui.mjs'));
+const text=node=>typeof node==='string'?node:(node?.children||[]).map(text).join('');
+test('Builder can create a project, record an expense and buyer collection, import a document and export a report',async()=>{
+ let workspace=null,revision=0,imported=null,csv=null;const listeners=new Map();
+ const bridge={readWorkspace:()=>JSON.stringify({workspace,revision}),readFiles:()=>JSON.stringify({files:[]}),saveWorkspace:(raw,expected)=>{assert.equal(expected,revision);workspace=JSON.parse(raw);revision++;return JSON.stringify({workspace,revision});},pickDocument:raw=>{imported=JSON.parse(raw);},exportCsv:value=>{csv=value;},openDocument(){},printReport(){},saveBackup(){},restoreBackup(){},openCloudWorkspace(){},showPrivacy(){},clearLocalData(){}};
+ const originalWindow=globalThis.window,originalFormData=globalThis.FormData;
+ globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+ globalThis.window={BuildLedgerNative:bridge,addEventListener:(n,f)=>listeners.set(n,f),removeEventListener:n=>listeners.delete(n)};
+ globalThis.FormData=class{constructor(data){this.data=data;}get(key){return this.data[key]??null;}};
+ let renderer;
+ const button=label=>{const found=renderer.root.findAllByType('button').find(b=>text(b).trim()===label);assert.ok(found,`Button: ${label}`);return found;};
+ const click=async label=>{await act(async()=>button(label).props.onClick());};
+ const submit=async data=>{await act(async()=>{await renderer.root.findByType('form').props.onSubmit({preventDefault(){},currentTarget:data});});};
+ try{
+  await act(async()=>{renderer=TestRenderer.create(React.createElement(App,{user:{name:'This phone',email:'device-local'}}),{createNodeMock:element=>element.type==='dialog'?{showModal(){}}:null});});
+  assert.equal(workspace,null);
+  await click('Create your workspace');await submit({builderName:'Test Constructions',city:'Hyderabad'});assert.equal(workspace.builderName,'Test Constructions');assert.equal(workspace.projects.length,0);
+  await click('New project');await submit({name:'Greenfield Homes',year:'2026',location:'Hyderabad',state:'Telangana',type:'Residential',budget:'100000',progress:'20',status:'In progress',notes:''});
+  const project=workspace.projects[0];assert.equal(project.name,'Greenfield Homes');assert.equal(project.budget,100000);
+  await click('Project payments');await click('Add payment');await submit({projectId:project.id,category:'Steel',party:'Steel Supplier',amount:'12000',paid:'7500',date:'2026-10-17',dueDate:'2026-10-20',method:'Bank transfer',reference:'INV-001',notes:''});
+  assert.equal(workspace.payments[0].paid,7500);assert.equal(workspace.payments[0].amount,12000);
+  await click('Buyers & agreements');await click('Add buyer');await submit({projectId:project.id,name:'Test Buyer',unit:'A-101',phone:'',saleValue:'80000',date:'2026-10-17',notes:''});
+  const buyer=workspace.buyers[0];assert.equal(buyer.saleValue,80000);
+  await click('Record collection');await submit({projectId:project.id,buyerId:buyer.id,amount:'20000',paid:'20000',date:'2026-10-17',dueDate:'',method:'Bank transfer',reference:'COL-001',notes:''});
+  assert.equal(workspace.payments[1].direction,'receipt');assert.equal(workspace.payments[1].party,'Test Buyer');assert.equal(workspace.payments[1].buyerId,buyer.id);
+  await click('Document vault');await click('Upload document');await submit({projectId:project.id,folder:'Engineer & architect drawings',documentType:'Architectural drawing'});
+  assert.deepEqual(imported,{projectId:project.id,folder:'Engineer & architect drawings',documentType:'Architectural drawing'});
+  await click('Reports');await click('Download CSV');assert.ok(csv.includes('Test Constructions'));assert.ok(csv.includes('Greenfield Homes'));assert.ok(csv.includes('Steel Supplier'));assert.ok(csv.includes('4500'));assert.ok(csv.includes('60000'));
+  let handled;await act(async()=>{handled=window.BuildLedgerBack();});assert.equal(handled,true);assert.equal(window.BuildLedgerBack(),false);
+  assert.equal(revision,5);
+ }finally{if(renderer)await act(async()=>renderer.unmount());globalThis.window=originalWindow;globalThis.FormData=originalFormData;delete globalThis.IS_REACT_ACT_ENVIRONMENT;}
+});

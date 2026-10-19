@@ -1,0 +1,20 @@
+import { defaultRequirements, type Workspace } from './model';
+const requirements=defaultRequirements;
+export const demoWorkspace:Workspace={builderName:'Meridian Builders',city:'Hyderabad, Telangana',storage:'cloud',projects:[
+{id:'demo-1',name:'Palm Grove Residences',year:2026,location:'Kondapur, Hyderabad',state:'Telangana',type:'Residential',budget:28000000,progress:64,status:'In progress',createdAt:'2026-04-06',notes:'24 thoughtfully designed residences. Structural work completed; finishing in progress.',requirements:requirements()},
+{id:'demo-2',name:'The Courtyard Villas',year:2026,location:'Mokila, Hyderabad',state:'Telangana',type:'Villa',budget:16000000,progress:32,status:'In progress',createdAt:'2026-06-14',notes:'A community of 8 independent villas.',requirements:requirements()},
+{id:'demo-3',name:'Northpoint Commercial',year:2027,location:'Gachibowli, Hyderabad',state:'Telangana',type:'Commercial',budget:8000000,progress:8,status:'Planning',createdAt:'2026-09-01',notes:'Retail and office development. Design development stage.',requirements:requirements()}],buyers:[
+{id:'b1',projectId:'demo-1',name:'Ananya Rao',unit:'A-102',phone:'',saleValue:7800000,date:'2026-06-10',notes:'Sample buyer record'},
+{id:'b2',projectId:'demo-1',name:'Vikram Mehta',unit:'B-204',phone:'',saleValue:8500000,date:'2026-07-12',notes:'Sample buyer record'},
+{id:'b3',projectId:'demo-2',name:'Priya Reddy',unit:'Villa 03',phone:'',saleValue:12500000,date:'2026-08-01',notes:'Sample buyer record'}],payments:[
+{id:'t1',projectId:'demo-1',direction:'expense',category:'Steel',party:'Deccan Steel Traders',amount:4200000,paid:4000000,date:'2026-05-11',dueDate:'2026-10-22',method:'Bank transfer',reference:'DEMO-001',buyerId:'',notes:'TMT steel supply'},
+{id:'t2',projectId:'demo-1',direction:'expense',category:'Cement',party:'Sri Sai Cement Agency',amount:2400000,paid:2400000,date:'2026-06-12',dueDate:'',method:'Bank transfer',reference:'DEMO-002',buyerId:'',notes:'Cement delivery'},
+{id:'t3',projectId:'demo-1',direction:'expense',category:'Labour / workers',party:'Ramesh Construction Team',amount:1800000,paid:1650000,date:'2026-07-18',dueDate:'2026-10-15',method:'UPI',reference:'DEMO-003',buyerId:'',notes:'Civil works'},
+{id:'t4',projectId:'demo-2',direction:'expense',category:'Bricks',party:'Hyderabad Brick Works',amount:1250000,paid:1250000,date:'2026-08-09',dueDate:'',method:'Cheque',reference:'DEMO-004',buyerId:'',notes:''},
+{id:'t5',projectId:'demo-1',direction:'expense',category:'Tiles',party:'Stone & Surface Co.',amount:960000,paid:720000,date:'2026-09-21',dueDate:'2026-10-25',method:'Bank transfer',reference:'DEMO-005',buyerId:'',notes:'Flooring materials'},
+{id:'t6',projectId:'demo-1',direction:'expense',category:'Electrical labour',party:'Brightline Electricals',amount:480000,paid:320000,date:'2026-10-14',dueDate:'2026-10-24',method:'UPI',reference:'DEMO-006',buyerId:'',notes:'First-floor wiring labour'},
+{id:'t7',projectId:'demo-2',direction:'expense',category:'Labour / workers',party:'Lakshmi Civil Contractors',amount:1500000,paid:1500000,date:'2026-09-28',dueDate:'',method:'Bank transfer',reference:'DEMO-007',buyerId:'',notes:''},
+{id:'t8',projectId:'demo-3',direction:'expense',category:'Legal fee (optional)',party:'Arun Legal Associates',amount:120000,paid:120000,date:'2026-10-10',dueDate:'',method:'Bank transfer',reference:'DEMO-008',buyerId:'',notes:'Title review'},
+{id:'r1',projectId:'demo-1',direction:'receipt',category:'Buyer collection',party:'Ananya Rao',amount:3500000,paid:3500000,date:'2026-07-10',dueDate:'',method:'Bank transfer',reference:'DEMO-R01',buyerId:'b1',notes:'Booking and foundation milestone'},
+{id:'r2',projectId:'demo-1',direction:'receipt',category:'Buyer collection',party:'Vikram Mehta',amount:2800000,paid:2800000,date:'2026-09-12',dueDate:'',method:'Bank transfer',reference:'DEMO-R02',buyerId:'b2',notes:'Booking payment'},
+{id:'r3',projectId:'demo-2',direction:'receipt',category:'Buyer collection',party:'Priya Reddy',amount:2500000,paid:2500000,date:'2026-10-08',dueDate:'',method:'Cheque',reference:'DEMO-R03',buyerId:'b3',notes:'Booking advance'}]};
